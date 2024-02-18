@@ -10,7 +10,8 @@ Vue.component('board', {
       newTask: {
         title: '',
         description: '',
-        deadline: ''
+        deadline: '',
+        returnReason: null
       }
     }
   },
@@ -21,11 +22,13 @@ Vue.component('board', {
         title: this.newTask.title,
         description: this.newTask.description,
         created: new Date().toLocaleDateString(),
-        deadline: this.formatDeadline(this.newTask.deadline)
+        deadline: this.formatDeadline(this.newTask.deadline),
+        returnReason: this.newTask.returnReason
       })
       this.newTask.title = ''
       this.newTask.description = ''
       this.newTask.deadline = ''
+      this.newTask.returnReason = null
       this.saveTasksLocale()
     },
     deleteTask(task) {
@@ -51,9 +54,16 @@ Vue.component('board', {
     moveTaskLeft(task) {
       const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
       if (columnIndex > 0) {
+        if (columnIndex === 2 && !task.returnReason) {
+          alert('Вы сможете перенести эту задачу во второй столбец, когда укажите причину возврата, нажав на кнопку редактировать');
+          return;
+        }
         const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
         this.columns[columnIndex].tasks.splice(taskIndex, 1)
         this.columns[columnIndex - 1].tasks.push(task)
+        if (columnIndex === 2) {
+          task.returnReasonEditing = true  
+        }
         this.saveTasksLocale()
       }
     },
@@ -63,10 +73,14 @@ Vue.component('board', {
         const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
         this.columns[columnIndex].tasks.splice(taskIndex, 1)
         this.columns[columnIndex + 1].tasks.push(task)
+        if (columnIndex === 1) {
+          task.returnReasonEditing = false 
+          task.returnReason = null  
+        }
         this.saveTasksLocale()
       }
     }
-},
+  },
   template: `
   <div class="board">
     <form @submit.prevent="addTask">
@@ -85,10 +99,12 @@ Vue.component('card', {
   data() {
     return {
       editing: false,
+      returnReasonEditing: false,
       editedTask: {
         title: '',
         description: '',
-        deadline: ''
+        deadline: '',
+        returnReason: null
       }
     }
   },
@@ -98,6 +114,8 @@ Vue.component('card', {
       this.editedTask.title = this.task.title;
       this.editedTask.description = this.task.description;
       this.editedTask.deadline = this.task.deadline;
+      this.editedTask.returnReason = this.task.returnReason;
+      this.returnReasonEditing = true;
     },
     saveTask() {
       this.task.title = this.editedTask.title;
@@ -105,8 +123,13 @@ Vue.component('card', {
       this.task.deadline = this.editedTask.deadline;
       this.task.lastEdited = new Date().toLocaleString();
       this.editing = false;
+      this.task.returnReason = this.editedTask.returnReason;
+      this.returnReasonEditing = false;
       this.saveTasksLocale();
-    }
+      if (this.task.returnReason && this.$parent.columns[1].tasks.includes(this.task) === false) {
+        this.$emit('moveTaskLeft', this.task);
+      }
+    },
   },
   template: `
   <div class="card">
@@ -123,6 +146,10 @@ Vue.component('card', {
         <p class="card-inscriptions">Дата создания:</p>
         <p class="card-inscriptions-p" > {{ task.created }}</p>
       </div>
+      <div v-if="task.returnReason">
+        <p class="card-inscriptions">Причина возврата:</p>
+        <p class="card-inscriptions-p" @click="editTask">{{ task.returnReason }}</p>
+      </div>
       <div class= "last-edit" v-if="task.lastEdited">
         <p class="card-inscriptions">Последнее редактирование:</p>
         <p class="card-inscriptions-p" > {{ task.lastEdited }}</p>
@@ -136,10 +163,11 @@ Vue.component('card', {
         <button class="btn-move"  @click="$emit('moveTaskRight', task)">&gt;</button>
       </div>
     </div>
-    <div v-if="editing" class="card-edit">
+    <div v-if="editing || returnReasonEditing" class="card-edit">
       <input v-model="editedTask.title" placeholder="Введите заголовок задачи" required>
       <textarea v-model="editedTask.description" placeholder="Введите описание задачи" required></textarea>
       <input v-model="editedTask.deadline" type="datetime-local" placeholder="Введите дедлайн задачи" required>
+      <input v-if="returnReasonEditing" v-model="editedTask.returnReason" placeholder="Введите причину возврата">
       <button @click="saveTask">Сохранить</button>
     </div>
   </div>
