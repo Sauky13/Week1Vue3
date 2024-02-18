@@ -8,16 +8,18 @@
 
 .column {
     flex: 1;
-    border: 1px solid #dbdbdb;
     padding: 10px;
-    border-radius: 5px;
+    border-radius: 6px;
     background-color: #f9f9f9;
     display: flex;
-    justify-content: flex-start;
     flex-direction: column;
     align-items: center;
 }
-
+.card-body{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
 .card {
     margin-bottom: 10px;
     padding: 20px;
@@ -30,8 +32,14 @@
     font-size: 15px;
     font-weight: 600;
     color: #8d8d8d;
-
+    margin: 0px;
 }
+
+.card-inscriptions-p{
+    margin:4px;
+}
+
+
 .card-edit{
     display: flex;
     flex-direction: column;
@@ -42,6 +50,8 @@
     background-color: #e7e7e7;
     border-radius: 5px;
     display: block;
+    padding: 5px;
+    
 }
 form {
     display: flex;
@@ -66,4 +76,18 @@ form {
   }
   h2{
       margin: auto;
+  }
+  button{
+    padding: 5px 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #c5516e;
+    color: white;
+    cursor: pointer;
+  }
+  .btn-move{
+    background-color: #7b93d4;
+    width: 30px;
+    height: 30px;
+    border-radius: 100px;
   }

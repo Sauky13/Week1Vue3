@@ -47,8 +47,26 @@ Vue.component('board', {
     },
     saveTask() {
       this.saveTasks();
+    },
+    moveTaskLeft(task) {
+      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
+      if (columnIndex > 0) {
+        const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
+        this.columns[columnIndex].tasks.splice(taskIndex, 1)
+        this.columns[columnIndex - 1].tasks.push(task)
+        this.saveTasksLocale()
+      }
+    },
+    moveTaskRight(task) {
+      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
+      if (columnIndex < this.columns.length - 1) {
+        const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
+        this.columns[columnIndex].tasks.splice(taskIndex, 1)
+        this.columns[columnIndex + 1].tasks.push(task)
+        this.saveTasksLocale()
+      }
     }
-  },
+},
   template: `
   <div class="board">
     <form @submit.prevent="addTask">
@@ -57,7 +75,7 @@ Vue.component('board', {
       <input id="taskDeadline" name="taskDeadline" v-model="newTask.deadline" type="datetime-local" placeholder="Введите дедлайн задачи" required>
       <button type="submit">Добавить задачу</button>
     </form>
-    <column v-for="column in columns" :key="column.name" :column="column" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale"></column>
+    <column v-for="column in columns" :key="column.name" :column="column" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale" @moveTaskLeft="moveTaskLeft" @moveTaskRight="moveTaskRight"></column>
   </div>
   `
 })
@@ -96,22 +114,26 @@ Vue.component('card', {
       <h2>{{ task.title }}</h2>
     </div>
     <div v-if="!editing" class="card-body">
-      <p>{{ task.description }}</p>
+      <p class="card-inscriptions-p" >{{ task.description }}</p>
       <div>
         <p class="card-inscriptions">Дедлайн:</p>
-        <p>{{ task.deadline }}</p>
+        <p class="card-inscriptions-p" >{{ task.deadline }}</p>
       </div>
       <div>
         <p class="card-inscriptions">Дата создания:</p>
-        <p> {{ task.created }}</p>
+        <p class="card-inscriptions-p" > {{ task.created }}</p>
       </div>
       <div class= "last-edit" v-if="task.lastEdited">
         <p class="card-inscriptions">Последнее редактирование:</p>
-        <p> {{ task.lastEdited }}</p>
+        <p class="card-inscriptions-p" > {{ task.lastEdited }}</p>
       </div>
       <div>
         <button @click="editTask">Редактировать</button>
         <button @click="deleteTask(task)">Удалить</button>
+      </div>
+      <div>
+        <button class="btn-move"  @click="$emit('moveTaskLeft', task)">&lt;</button>
+        <button class="btn-move"  @click="$emit('moveTaskRight', task)">&gt;</button>
       </div>
     </div>
     <div v-if="editing" class="card-edit">
@@ -129,7 +151,7 @@ Vue.component('column', {
   template: `
   <div class="column">
     <h3>{{ column.name }}</h3>
-    <card v-for="task in column.tasks" :key="task.id" :task="task" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale"></card>
+    <card v-for="task in column.tasks" :key="task.id" :task="task" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale" @moveTaskLeft="$emit('moveTaskLeft', task)" @moveTaskRight="$emit('moveTaskRight', task)"></card>
   </div>
   `
 })
