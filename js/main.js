@@ -47,7 +47,7 @@ Vue.component('board', {
     },
     formatDeadline(deadline) {
       const date = new Date(deadline)
-      return date.toLocaleString()
+      return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
     },
     saveTask() {
       this.saveTasks();
@@ -104,13 +104,13 @@ Vue.component('board', {
       <input id="taskDeadline" name="taskDeadline" v-model="newTask.deadline" type="datetime-local" placeholder="Введите дедлайн задачи" required>
       <button type="submit">Добавить задачу</button>
     </form>
-    <column v-for="(column, index) in columns" :key="column.name" :column="column" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale" :index="index" @moveTaskLeft="moveTaskLeft" @moveTaskRight="moveTaskRight"></column>
+    <column v-for="(column, index) in columns" :key="column.name" :format-deadline="formatDeadline" :column="column" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale" :index="index" @moveTaskLeft="moveTaskLeft" @moveTaskRight="moveTaskRight"></column>
   </div>
   `
 })
 
 Vue.component('card', {
-  props: ['task', 'deleteTask', 'saveTasksLocale', 'columnIndex'],
+  props: ['task', 'deleteTask', 'saveTasksLocale', 'columnIndex', 'formatDeadline'],
   data() {
     return {
       editing: false,
@@ -135,7 +135,7 @@ Vue.component('card', {
     saveTask() {
       this.task.title = this.editedTask.title;
       this.task.description = this.editedTask.description;
-      this.task.deadline = this.editedTask.deadline;
+      this.task.deadline = this.formatDeadline(this.editedTask.deadline);
       this.task.lastEdited = new Date().toLocaleString();
       this.editing = false;
       this.task.returnReason = this.editedTask.returnReason;
@@ -194,11 +194,11 @@ Vue.component('card', {
 })
 
 Vue.component('column', {
-  props: ['column', 'deleteTask', 'saveTasksLocale', 'index'],
+  props: ['column', 'deleteTask', 'saveTasksLocale', 'index', 'formatDeadline'],
   template: `
   <div class="column">
     <h3>{{ column.name }}</h3>
-    <card v-for="task in column.tasks" :key="task.id" :task="task" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale" :columnIndex="index" @moveTaskLeft="$emit('moveTaskLeft', task)" @moveTaskRight="$emit('moveTaskRight', task)"></card>
+    <card v-for="task in column.tasks" :key="task.id" :task="task" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale" :columnIndex="index" :format-deadline="formatDeadline" @moveTaskLeft="$emit('moveTaskLeft', task)" @moveTaskRight="$emit('moveTaskRight', task)"></card>
   </div>
   `
 })
