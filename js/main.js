@@ -26,14 +26,27 @@ Vue.component('board', {
       this.newTask.title = ''
       this.newTask.description = ''
       this.newTask.deadline = ''
-      this.saveTasks()
+      this.saveTasksLocale()
     },
-    saveTasks() {
+    deleteTask(task) {
+      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
+      if (columnIndex !== -1) {
+        const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
+        if (taskIndex !== -1) {
+          this.columns[columnIndex].tasks.splice(taskIndex, 1)
+          this.saveTasksLocale()
+        }
+      }
+    },
+    saveTasksLocale() {
       localStorage.setItem('columns', JSON.stringify(this.columns))
     },
     formatDeadline(deadline) {
       const date = new Date(deadline)
       return date.toLocaleString()
+    },
+    saveTask() {
+      this.saveTasks();
     }
   },
   template: `
@@ -44,19 +57,45 @@ Vue.component('board', {
       <input id="taskDeadline" name="taskDeadline" v-model="newTask.deadline" type="datetime-local" placeholder="Введите дедлайн задачи" required>
       <button type="submit">Добавить задачу</button>
     </form>
-    <column v-for="column in columns" :key="column.name" :column="column"></column>
+    <column v-for="column in columns" :key="column.name" :column="column" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale"></column>
   </div>
   `
 })
 
 Vue.component('card', {
-  props: ['task'],
+  props: ['task', 'deleteTask', 'saveTasksLocale'],
+  data() {
+    return {
+      editing: false,
+      editedTask: {
+        title: '',
+        description: '',
+        deadline: ''
+      }
+    }
+  },
+  methods: {
+    editTask() {
+      this.editing = true;
+      this.editedTask.title = this.task.title;
+      this.editedTask.description = this.task.description;
+      this.editedTask.deadline = this.task.deadline;
+    },
+    saveTask() {
+      this.task.title = this.editedTask.title;
+      this.task.description = this.editedTask.description;
+      this.task.deadline = this.editedTask.deadline;
+      this.task.lastEdited = new Date().toLocaleString();
+      this.editing = false;
+      this.saveTasksLocale();
+    }
+  },
   template: `
   <div class="card">
-    <div class="card-header">
+    <div v-if="!editing" class="card-header">
       <h2>{{ task.title }}</h2>
     </div>
-    <div class="card-body">
+    <div v-if="!editing" class="card-body">
       <p>{{ task.description }}</p>
       <div>
         <p class="card-inscriptions">Дедлайн:</p>
@@ -66,21 +105,31 @@ Vue.component('card', {
         <p class="card-inscriptions">Дата создания:</p>
         <p> {{ task.created }}</p>
       </div>
+      <div class= "last-edit" v-if="task.lastEdited">
+        <p class="card-inscriptions">Последнее редактирование:</p>
+        <p> {{ task.lastEdited }}</p>
+      </div>
       <div>
-        <button @click="editTask(task)">Редактировать</button>
+        <button @click="editTask">Редактировать</button>
         <button @click="deleteTask(task)">Удалить</button>
       </div>
+    </div>
+    <div v-if="editing" class="card-edit">
+      <input v-model="editedTask.title" placeholder="Введите заголовок задачи" required>
+      <textarea v-model="editedTask.description" placeholder="Введите описание задачи" required></textarea>
+      <input v-model="editedTask.deadline" type="datetime-local" placeholder="Введите дедлайн задачи" required>
+      <button @click="saveTask">Сохранить</button>
     </div>
   </div>
   `
 })
 
 Vue.component('column', {
-  props: ['column'],
+  props: ['column', 'deleteTask', 'saveTasksLocale'],
   template: `
   <div class="column">
     <h3>{{ column.name }}</h3>
-    <card v-for="task in column.tasks" :key="task.id" :task="task"></card>
+    <card v-for="task in column.tasks" :key="task.id" :task="task" :deleteTask="deleteTask" :saveTasksLocale="saveTasksLocale"></card>
   </div>
   `
 })

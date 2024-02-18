@@ -19,15 +19,12 @@
 }
 
 .card {
-    border: 1px solid #ccc;
     margin-bottom: 10px;
     padding: 20px;
     border-radius: 10px;
     background-color: #f9f9f9;
-    box-shadow: 0 2px 5px #8d8d8d;
-    display: flex;
-    flex-direction: column;
-    width: 280px;
+    box-shadow: 0 2px 5px #272727;
+  
 }
 .card-inscriptions{
     font-size: 15px;
@@ -35,7 +32,17 @@
     color: #8d8d8d;
 
 }
-
+.card-edit{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.last-edit{
+    font-size: x-small;
+    background-color: #e7e7e7;
+    border-radius: 5px;
+    display: block;
+}
 form {
     display: flex;
     flex-direction: column;
@@ -56,4 +63,7 @@ form {
     background-color: #7fc28d;
     color: white;
     cursor: pointer;
+  }
+  h2{
+      margin: auto;
   }
