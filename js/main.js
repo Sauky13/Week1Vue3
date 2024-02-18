@@ -23,7 +23,8 @@ Vue.component('board', {
         description: this.newTask.description,
         created: new Date().toLocaleDateString(),
         deadline: this.formatDeadline(this.newTask.deadline),
-        returnReason: this.newTask.returnReason
+        returnReason: this.newTask.returnReason,
+        status: ''
       })
       this.newTask.title = ''
       this.newTask.description = ''
@@ -76,6 +77,17 @@ Vue.component('board', {
         if (columnIndex === 1) {
           task.returnReasonEditing = false 
           task.returnReason = null  
+        }
+        if (columnIndex === 2) {
+          const [day, month, yearTime] = task.deadline.split('.');
+          const [year, time] = yearTime.split(', ');
+          const deadline = new Date(`${year}-${month}-${day}T${time}`);
+          const now = new Date();
+          if (isNaN(deadline.getTime())) {
+            console.error('Invalid deadline:', task.deadline);
+          } else {
+            task.status = now.getTime() > deadline.getTime() ? 'Просрочено' : 'Выполнено в срок';
+          }
         }
         this.saveTasksLocale()
       }
@@ -153,6 +165,10 @@ Vue.component('card', {
       <div class= "last-edit" v-if="task.lastEdited">
         <p class="card-inscriptions">Последнее редактирование:</p>
         <p class="card-inscriptions-p" > {{ task.lastEdited }}</p>
+      </div>
+      <div v-if="task.status">
+        <p class="card-inscriptions">Статус:</p>
+        <p class="card-inscriptions-p">{{ task.status }}</p>
       </div>
       <div>
         <button @click="editTask">Редактировать</button>
