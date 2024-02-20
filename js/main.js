@@ -49,9 +49,6 @@ Vue.component('board', {
       const date = new Date(deadline)
       return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
     },
-    saveTask() {
-      this.saveTasks();
-    },
     moveTaskLeft(task) {
       const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
       if (columnIndex > 0) {
@@ -82,15 +79,21 @@ Vue.component('board', {
           task.returnReason = null  
         }
         if (columnIndex === 2) {
-          const [day, month, yearTime] = task.deadline.split('.');
-          const [year, time] = yearTime.split(', ');
-          const deadline = new Date(`${year}-${month}-${day}T${time}`);
-          const now = new Date();
-          if (isNaN(deadline.getTime())) {
-            console.error('Invalid deadline:', task.deadline);
-          } else {
-            task.status = now.getTime() > deadline.getTime() ? 'Просрочено' : 'Выполнено в срок';
-          }
+          const deadlineParts = task.deadline.split(' ');
+          if (deadlineParts.length === 2) {
+            const [date, time] = deadlineParts;
+            const dateParts = date.split('.');
+            if (dateParts.length === 3) {
+              const [day, month, year] = dateParts;
+              const deadline = new Date(`${year}-${month}-${day}T${time}`);
+              const now = new Date();
+              if (isNaN(deadline.getTime())) {
+                console.error('Не правильный формат дедлайна:', task.deadline);
+              } else {
+                task.status = now.getTime() > deadline.getTime() ? 'Просрочено' : 'Выполнено в срок';
+              }
+            } 
+          } 
         }
         this.saveTasksLocale()
       }
@@ -128,9 +131,15 @@ Vue.component('card', {
       this.editing = true;
       this.editedTask.title = this.task.title;
       this.editedTask.description = this.task.description;
-      this.editedTask.deadline = this.task.deadline;
       this.editedTask.returnReason = this.task.returnReason;
       this.returnReasonEditing = this.columnIndex === 2; 
+  
+      const deadlineDate = new Date(this.task.deadline);
+      const day = deadlineDate.getDate().toString().padStart(2, '0');
+      const month = (deadlineDate.getMonth() + 1).toString().padStart(2, '0');
+      const year = deadlineDate.getFullYear();
+      const time = deadlineDate.toTimeString().split(' ')[0];
+      this.editedTask.deadline = `${day}.${month}.${year} ${time}`;
     },
     saveTask() {
       this.task.title = this.editedTask.title;
