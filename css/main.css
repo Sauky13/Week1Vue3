@@ -1,19 +1,21 @@
 .board {
+
     display: flex;
     justify-content: center;
     gap: 20px;
     padding: 20px;
     font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif
+    
 }
 
 .column {
     flex: 1;
-    padding: 20px;
     border-radius: 6px;
     background-color: #ececec;
     display: flex;
     flex-direction: column;
     align-items: center;
+
 }
 .card-body{
     display: flex;

@@ -50,33 +50,34 @@ Vue.component('board', {
       return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
     },
     moveTaskLeft(task) {
-      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
+      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task));
+
       if (columnIndex > 0) {
         if (columnIndex === 2 && !task.returnReason) {
           alert('Вы сможете перенести эту задачу во второй столбец, когда укажите причину возврата, нажав на кнопку редактировать');
           return;
         }
-        const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
-        this.columns[columnIndex].tasks.splice(taskIndex, 1)
-        this.columns[columnIndex - 1].tasks.push(task)
+        const taskIndex = this.columns[columnIndex].tasks.indexOf(task);
+        this.columns[columnIndex].tasks.splice(taskIndex, 1);
+        this.columns[columnIndex - 1].tasks.push(task);
         if (columnIndex === 2) {
-          task.returnReasonEditing = true  
+          task.returnReasonEditing = true;
         }
         if (columnIndex === 3) {
           task.status = '';
         }
-        this.saveTasksLocale()
+        this.saveTasksLocale();
       }
     },
     moveTaskRight(task) {
-      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task))
+      const columnIndex = this.columns.findIndex(column => column.tasks.includes(task));
       if (columnIndex < this.columns.length - 1) {
-        const taskIndex = this.columns[columnIndex].tasks.indexOf(task)
-        this.columns[columnIndex].tasks.splice(taskIndex, 1)
-        this.columns[columnIndex + 1].tasks.push(task)
+        const taskIndex = this.columns[columnIndex].tasks.indexOf(task);
+        this.columns[columnIndex].tasks.splice(taskIndex, 1);
+        this.columns[columnIndex + 1].tasks.push(task);
         if (columnIndex === 1) {
-          task.returnReasonEditing = false 
-          task.returnReason = null  
+          task.returnReasonEditing = false;
+          task.returnReason = null;
         }
         if (columnIndex === 2) {
           const deadlineParts = task.deadline.split(' ');
@@ -88,14 +89,14 @@ Vue.component('board', {
               const deadline = new Date(`${year}-${month}-${day}T${time}`);
               const now = new Date();
               if (isNaN(deadline.getTime())) {
-                console.error('Не правильный формат дедлайна:', task.deadline);
+                console.error('Неправильный формат дедлайна:', task.deadline);
               } else {
                 task.status = now.getTime() > deadline.getTime() ? 'Просрочено' : 'Выполнено в срок';
               }
-            } 
-          } 
+            }
+          }
         }
-        this.saveTasksLocale()
+        this.saveTasksLocale();
       }
     }
   },
@@ -132,16 +133,20 @@ Vue.component('card', {
       this.editedTask.title = this.task.title;
       this.editedTask.description = this.task.description;
       this.editedTask.returnReason = this.task.returnReason;
-      this.returnReasonEditing = this.columnIndex === 2; 
-  
-      const deadlineDate = new Date(this.task.deadline);
-      const day = deadlineDate.getDate().toString().padStart(2, '0');
-      const month = (deadlineDate.getMonth() + 1).toString().padStart(2, '0');
-      const year = deadlineDate.getFullYear();
-      const time = deadlineDate.toTimeString().split(' ')[0];
-      this.editedTask.deadline = `${day}.${month}.${year} ${time}`;
+      this.returnReasonEditing = this.columnIndex === 2;
+    
+      if (this.task.deadline) {
+        let currentDeadline = new Date(this.task.deadline);
+        // Преобразуем дату к формату YYYY-MM-DD и установим в поле редактирования
+        this.editedTask.deadline = currentDeadline.toISOString().split('T')[0];
+      } else {
+        this.editedTask.deadline = this.deadline; 
+      }
     },
-    saveTask() {
+  saveTask() {
+    if (!this.editedTask.deadline) {
+      delete this.editedTask.deadline;
+    } else {
       this.task.title = this.editedTask.title;
       this.task.description = this.editedTask.description;
       this.task.deadline = this.formatDeadline(this.editedTask.deadline);
@@ -150,10 +155,11 @@ Vue.component('card', {
       this.task.returnReason = this.editedTask.returnReason;
       this.returnReasonEditing = false;
       this.saveTasksLocale();
-      if (this.task.returnReason && this.$parent.columns[1].tasks.includes(this.task) === false) {
+      if (this.editedTask.returnReason && this.columnIndex === 2) {
         this.$emit('moveTaskLeft', this.task);
       }
-    },
+    }
+  },
   },
   template: `
   <div class="card">
@@ -187,7 +193,7 @@ Vue.component('card', {
         <button @click="deleteTask(task)">Удалить</button>
       </div>
       <div>
-        <button class="btn-move"  @click="$emit('moveTaskLeft', task)">&lt;</button>
+        <button v-if="columnIndex === 2" class="btn-move" @click="$emit('moveTaskLeft', task)">&lt;</button>
         <button class="btn-move"  @click="$emit('moveTaskRight', task)">&gt;</button>
       </div>
     </div>
